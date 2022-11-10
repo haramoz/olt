@@ -561,6 +561,9 @@ public class OltFlowService implements OltFlowServiceInterface {
         handleSubscriberDhcpFlows(sub.device.id(), sub.port, FlowOperation.ADD,
                 sub.subscriberAndDeviceInformation);
 
+        // NOTE we need to add the PPPOE flow regardless so that the host can be discovered and the MacAddress added
+        handleSubscriberPppoeFlows(sub.device.id(), sub.port, FlowOperation.ADD, sub.subscriberAndDeviceInformation);
+
         if (isMacLearningEnabled(sub.subscriberAndDeviceInformation)
                 && !isMacAddressAvailable(sub.device.id(), sub.port,
                 sub.subscriberAndDeviceInformation)) {
@@ -572,7 +575,6 @@ public class OltFlowService implements OltFlowServiceInterface {
         // always process them before
         handleSubscriberEapolFlows(sub, FlowOperation.ADD, sub.subscriberAndDeviceInformation);
 
-        handleSubscriberPppoeFlows(sub.device.id(), sub.port, FlowOperation.ADD, sub.subscriberAndDeviceInformation);
 
         handleSubscriberDataFlows(sub.device, sub.port, FlowOperation.ADD,
                 sub.subscriberAndDeviceInformation, multicastServiceName);
