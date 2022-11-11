@@ -568,6 +568,7 @@ public class Olt
                             if (sub.hasSubscriber) {
                                 // this is a provision subscriber call
                                 if (oltFlowService.handleSubscriberFlows(sub, defaultBpId, multicastServiceName)) {
+                                    log.info("Returned true from handleSubscriberFlows!");
                                     removeSubscriberFromQueue(sub);
                                 }
                             } else {

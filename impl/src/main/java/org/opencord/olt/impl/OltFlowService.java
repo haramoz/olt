@@ -516,11 +516,14 @@ public class OltFlowService implements OltFlowServiceInterface {
     @Override
     public boolean handleSubscriberFlows(DiscoveredSubscriber sub, String defaultBandwidthProfile,
                                          String multicastServiceName) {
+        log.info("Inside handleSubscriberFlows");
         // NOTE that we are taking defaultBandwithProfile as a parameter as that can be configured in the Olt component
         if (sub.status == DiscoveredSubscriber.Status.ADDED) {
+            log.info("handleSubscriberFlows: sub status added!");
             return addSubscriberFlows(sub, defaultBandwidthProfile, multicastServiceName);
         } else if (sub.status == DiscoveredSubscriber.Status.REMOVED ||
                 sub.status == DiscoveredSubscriber.Status.ADMIN_REMOVED) {
+            log.info("handleSubscriberFlows: sub status removed!");
             return removeSubscriberFlows(sub, defaultBandwidthProfile, multicastServiceName);
         } else {
             log.error("don't know how to handle {}", sub);
@@ -530,6 +533,8 @@ public class OltFlowService implements OltFlowServiceInterface {
 
     private boolean addSubscriberFlows(DiscoveredSubscriber sub, String defaultBandwithProfile,
                                        String multicastServiceName) {
+        log.info("addSubscriberFlows: inside!");
+
         if (log.isTraceEnabled()) {
             log.trace("Provisioning of subscriber on {} started", portWithName(sub.port));
         }
@@ -551,6 +556,8 @@ public class OltFlowService implements OltFlowServiceInterface {
             }
         }
 
+        log.info("addSubscriberFlows: before meter creation!");
+
         // NOTE createMeters will return if the meters are not installed
         if (!oltMeterService.createMeters(sub.device.id(),
                 sub.subscriberAndDeviceInformation, multicastServiceName)) {
@@ -561,15 +568,21 @@ public class OltFlowService implements OltFlowServiceInterface {
         handleSubscriberDhcpFlows(sub.device.id(), sub.port, FlowOperation.ADD,
                 sub.subscriberAndDeviceInformation);
 
+        log.info("addSubscriberFlows: before handleSubscriberPppoeFlows!");
+
         // NOTE we need to add the PPPOE flow regardless so that the host can be discovered and the MacAddress added
         handleSubscriberPppoeFlows(sub.device.id(), sub.port, FlowOperation.ADD, sub.subscriberAndDeviceInformation);
+
+        log.info("addSubscriberFlows: after handleSubscriberPppoeFlows!");
 
         if (isMacLearningEnabled(sub.subscriberAndDeviceInformation)
                 && !isMacAddressAvailable(sub.device.id(), sub.port,
                 sub.subscriberAndDeviceInformation)) {
+            // there should be information available in sub port or subscriber info
             log.debug("Awaiting for macAddress on {}", portWithName(sub.port));
             return false;
         }
+        log.info("addSubscriberFlows: returned True!");
 
         // NOTE that the EAPOL flows handling is based on the data-plane flows status
         // always process them before
@@ -1049,11 +1062,16 @@ public class OltFlowService implements OltFlowServiceInterface {
     protected void handleSubscriberPppoeFlows(DeviceId deviceId, Port port,
                                              FlowOperation action,
                                              SubscriberAndDeviceInformation si) {
+        log.info("handleSubscriberPppoeFlows: before forEach!");
+
         si.uniTagList().forEach(uti -> {
 
             if (!uti.getIsPppoeRequired()) {
+                log.info("handleSubscriberPppoeFlows: getIsPppoeRequired is False!");
                 return;
             }
+
+            log.info("handleSubscriberPppoeFlows: getIsPppoeRequired is True!");
 
             // if it's an ADD skip if flows are there,
             // if it's a DELETE skip if flows are not there
@@ -1075,9 +1093,13 @@ public class OltFlowService implements OltFlowServiceInterface {
                     .getMeterIdForBandwidthProfile(deviceId, uti.getUpstreamOltBandwidthProfile());
 
             if (enablePppoe) {
+                log.info("handleSubscriberPppoeFlows: enablePppoe is True!");
+
                 processPPPoEDFilteringObjectives(deviceId, port, action, FlowDirection.UPSTREAM, meterId, oltMeterId,
                         uti.getTechnologyProfileId(), uti.getPonCTag(), uti.getUniTagMatch(),
                         (byte) uti.getUsPonCTagPriority());
+            } else {
+                log.info("handleSubscriberPppoeFlows: enablePppoe is False!");
             }
         });
     }
