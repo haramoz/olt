@@ -551,6 +551,7 @@ public class OltFlowService implements OltFlowServiceInterface {
             }
         }
 
+        log.info("Before create meter");
         // NOTE createMeters will return if the meters are not installed
         if (!oltMeterService.createMeters(sub.device.id(),
                 sub.subscriberAndDeviceInformation, multicastServiceName)) {
@@ -560,6 +561,11 @@ public class OltFlowService implements OltFlowServiceInterface {
         // NOTE we need to add the DHCP flow regardless so that the host can be discovered and the MacAddress added
         handleSubscriberDhcpFlows(sub.device.id(), sub.port, FlowOperation.ADD,
                 sub.subscriberAndDeviceInformation);
+
+        log.info("Before create handleSubscriberPppoeFlows");
+        handleSubscriberPppoeFlows(sub.device.id(), sub.port, FlowOperation.ADD, sub.subscriberAndDeviceInformation);
+        log.info("After create handleSubscriberPppoeFlows");
+
 
         if (isMacLearningEnabled(sub.subscriberAndDeviceInformation)
                 && !isMacAddressAvailable(sub.device.id(), sub.port,
@@ -572,7 +578,6 @@ public class OltFlowService implements OltFlowServiceInterface {
         // always process them before
         handleSubscriberEapolFlows(sub, FlowOperation.ADD, sub.subscriberAndDeviceInformation);
 
-        handleSubscriberPppoeFlows(sub.device.id(), sub.port, FlowOperation.ADD, sub.subscriberAndDeviceInformation);
 
         handleSubscriberDataFlows(sub.device, sub.port, FlowOperation.ADD,
                 sub.subscriberAndDeviceInformation, multicastServiceName);
@@ -1047,6 +1052,8 @@ public class OltFlowService implements OltFlowServiceInterface {
     protected void handleSubscriberPppoeFlows(DeviceId deviceId, Port port,
                                              FlowOperation action,
                                              SubscriberAndDeviceInformation si) {
+        log.info("inside handleSubscriberPppoeFlows");
+
         si.uniTagList().forEach(uti -> {
 
             if (!uti.getIsPppoeRequired()) {
